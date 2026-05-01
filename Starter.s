@@ -1,9 +1,9 @@
 // ========================================================================================
 //     TEAM  INFO
-// Group member 1 name:
-// Group member 1 PID:
-// Group member 2 name:
-// Group member 2 PID:
+// Group member 1 name: Riya Bhatia
+// Group member 1 PID: A18371861
+// Group member 2 name: Calvin Hu
+// Group member 2 PID: 
 // ========================================================================================
 
 // ========================================================================================
