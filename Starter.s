@@ -72,8 +72,10 @@ getAddr:
         //   X5: The address of (pointer to) the desired element of the matrix.
 
         //YOUR CODE STARTS HERE
-
-
+        MUL X12, X6, X8  //calculating row*stride
+        ADD X12, X12, X7  //add the column for offset
+        LSL X12, X12, #3 //offset should be *8
+        ADD X5, X5, X12 //final element
 
         //YOUR CODE ENDS HERE
 
