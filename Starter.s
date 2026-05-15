@@ -76,7 +76,6 @@ getAddr:
         ADD X12, X12, X7  //add the column for offset
         LSL X12, X12, #3 //offset should be *8
         ADD X5, X5, X12 //final element
-
         //YOUR CODE ENDS HERE
 
 
@@ -125,7 +124,38 @@ splitOffset:
 
 
         //YOUR CODE STARTS HERE
+        LSR X7, X1, #1  //divide by two by doing logical shift (half = n/2)
+        CBNZ X2, caseNonZero
+        ADD X8, X0, XZR //if quad == 0, return x8 as is (pointing to the base)
+        BR 
 
+        caseNonZero:
+        ADD X4, XZR, #1 //for quadrant == 1 store in x4
+        ADD X5, XZR, #2 //for quadrant == 2 store in x5
+        ADD X6, XZR, #3 //for quadrant == 3 store in x6
+
+        MUL X9, X7, X3 //half * stride 
+
+        CMP X2, X4
+        B.EQ case1
+
+        CMP X2, X5
+        B.EQ case2
+
+        //if quad != 0, 1, 2
+        ADD X9, X9, X7 //half*stride + half
+        LSL X9, X9, #3  //offset *8
+        ADD X8, X0, X9  //result = base + (half*stride+half)*8
+
+        case1:
+        LSL X7, X7, #3  //half*8
+        ADD X8, X0, X7 //if quad == 1, result = base + half
+        BR LR
+
+        case2: 
+        LSL X9, X9, #3  //8*(half*stride) offset calc
+        ADD X8, X0, X9 //if quad == 2, result = base + (half*stride) 
+        BR LR
 
 
         //YOUR CODE ENDS HERE
