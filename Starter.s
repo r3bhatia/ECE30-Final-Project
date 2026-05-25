@@ -3,7 +3,7 @@
 // Group member 1 name: Riya Bhatia
 // Group member 1 PID: A18371861
 // Group member 2 name: Calvin Hu
-// Group member 2 PID: 
+// Group member 2 PID: A19112164
 // ========================================================================================
 
 // ========================================================================================
@@ -76,6 +76,7 @@ getAddr:
         ADD X12, X12, X7  //add the column for offset
         LSL X12, X12, #3 //offset should be *8
         ADD X5, X5, X12 //final element
+        BR LR
         //YOUR CODE ENDS HERE
 
 
@@ -99,8 +100,109 @@ baseMultiplyAdd:
         //  X0: The trace of the resulting n*n block of C.
 
         //YOUR CODE STARTS HERE
+        SUBI SP, SP, #112
+        STUR LR, [SP, #0]
+        STUR FP, [SP, #8]
+        ADD FP, SP, XZR
+        STUR FP, [SP, #8]
+        ADD FP, SP, XZR
+        STUR X19, [SP, #16]
+        STUR X20, [SP, #24]
+        STUR X21, [SP, #32]
+        STUR X22, [SP, #40]
+        STUR X23, [SP, #48]
+        STUR X24, [SP, #56]
+        STUR X25, [SP, #64]
+        STUR X26, [SP, #72]
+        STUR X3,  [SP, #80]     // Store n
+        STUR X4,  [SP, #88]     // Store stride
 
+        ADD X19, X0, XZR        // X19 = A
+        ADD X20, X1, XZR        // X20 = B
+        ADD X21, X2, XZR        // X21 = C
+        ADD X25, XZR, XZR       // X25 = t = 0
+        ADD X22, XZR, XZR       // X22 = i = 0
 
+loop_i:
+        LDUR X3, [SP, #80]
+        CMP X22, X3
+        B.GE part2done
+        ADD X23, XZR, XZR       // X23 = j = 0
+loop_j:
+        LDUR X3, [SP, #80]
+        CMP X23, X3
+        B.GE part2_j_done
+        ADD X26, XZR, XZR       // X26 = sum = 0
+        ADD X24, XZR, XZR       // X24 = k = 0
+loop_k:
+        LDUR X3, [SP, #80]
+        CMP X24, X3
+        B.GE part2_k_done
+        // getAdder(A, i, k, stride)
+        ADD X5, X19, XZR
+        ADD X6, X22, XZR
+        ADD X7, X24, XZR
+        LDUR X8, [SP, #88]
+        BL getAddr
+        LDUR X9, [X5, #0]
+        STUR X9, [SP, #96]
+
+        // getAddr(B, k, j, stride)
+        ADD X5, X20, XZR
+        ADD X6, X24, XZR
+        ADD X7, X23, XZR
+        LDUR X8, [SP, #88]
+        BL getAddr
+
+        LDUR X10, [X5, #0]      // B[k][j]
+        LDUR X9, [SP, #96]      // Restore A[i][k]
+        MUL X11, X9, X10        // A * B
+        ADD X26, X26, X11       // sum += A * B
+        ADDI X24, X24, #1       // increment k
+
+part2_k_done:
+        // getAddr(C, i, j, stride)
+        ADD X5, X21, XZR
+        ADD X6, X22, XZR
+        ADD X7, X23, XZR
+        LDUR X8, [SP, #88]
+        BL getAddr
+        LDUR X9, [X5, #0]       // C[i][j]
+        ADD X9, X9, X26         // C[i][j] + sum
+        STUR X9, [X5, #0]       // C[i][j] += sum
+
+        ADDI X23, X23, #1       // increment j
+        B loop_j
+
+part2_j_done:
+        // getAddr(C, i, i, stride)
+        ADD X5, X21, XZR
+        ADD X6, X22, XZR
+        ADD X7, X22, XZR
+        LDUR X8, [SP, #88]
+        BL getAddr
+        LDUR X9, [X5, #0]
+        ADD X25, X25, X9        // t += C[i][i]
+
+        ADDI X22, X22, #1       // increment i
+        B loop_i
+
+part2done:
+        ADD X0, X25, XZR        // return t
+
+        LDUR X26, [SP, #72]
+        LDUR X25, [SP, #64]
+        LDUR X24, [SP, #56]
+        LDUR X23, [SP, #48]
+        LDUR X22, [SP, #40]
+        LDUR X21, [SP, #32]
+        LDUR X20, [SP, #24]
+        LDUR X19, [SP, #16]
+        LDUR FP, [SP, #8]
+        LDUR LR, [SP, #0]
+        ADDI SP, SP, #112
+        BR LR
+        
         //YOUR CODE ENDS HERE
 
 
