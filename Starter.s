@@ -106,6 +106,8 @@ baseMultiplyAdd:
         ADD FP, SP, XZR
         STUR FP, [SP, #8]
         ADD FP, SP, XZR
+
+        //store all garbage values
         STUR X19, [SP, #16]
         STUR X20, [SP, #24]
         STUR X21, [SP, #32]
@@ -114,9 +116,9 @@ baseMultiplyAdd:
         STUR X24, [SP, #56]
         STUR X25, [SP, #64]
         STUR X26, [SP, #72]
+
         STUR X3,  [SP, #80]     // Store n
         STUR X4,  [SP, #88]     // Store stride
-
         ADD X19, X0, XZR        // X19 = A
         ADD X20, X1, XZR        // X20 = B
         ADD X21, X2, XZR        // X21 = C
@@ -190,6 +192,7 @@ part2_j_done:
 part2done:
         ADD X0, X25, XZR        // return t
 
+        //load all previous values
         LDUR X26, [SP, #72]
         LDUR X25, [SP, #64]
         LDUR X24, [SP, #56]
@@ -200,6 +203,7 @@ part2done:
         LDUR X19, [SP, #16]
         LDUR FP, [SP, #8]
         LDUR LR, [SP, #0]
+
         ADDI SP, SP, #112
         BR LR
         
@@ -284,8 +288,205 @@ recBlockMul:
         //  X0: sum of traces of all diagonal base-case blocks
 
         //YOUR CODE STARTS HERE
+        CMP X3, X4 
+        B.GT splitOffsets
+        ADD X4, X5, XZR
+        B baseMultiplyAdd
 
+splitOffsets:
+        SUBI SP, SP, #176
+        STUR LR, [SP, #0]
+        STUR FP, [SP, #8]
+        ADD FP, SP, XZR
 
+        //store garbage values
+        STUR X19, [SP, #16]
+        STUR X20, [SP, #24]
+        STUR X21, [SP, #32]
+        STUR X22, [SP, #40]
+        STUR X23, [SP, #48]
+        STUR X24, [SP, #56]
+        STUR X25, [SP, #64]
+        STUR X26, [SP, #72]
+
+        ADD X23, X0, XZR        // Store A
+        ADD X24, X1, XZR        // Store B
+        ADD X25, X2, XZR        // Store C
+        ADD X26, X3, XZR        // Store n
+        LSR X20, X3, #1         // X20 = n / 2
+        ADD X21, X4, XZR        // X21 = base limit
+        ADD X22, X5, XZR        // X22 = stride
+        ADD X19, XZR, XZR       // X19 = t = 0
+
+        ADD X0, X23, XZR
+        ADD X1, X26, XZR
+        ADD X2, XZR, XZR        // quadrant = 0
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #80]      // A11
+
+        ADD X0, X23, XZR
+        ADD X1, X26, XZR
+        ADDI X2, XZR, #1        // quadrant = 1
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #88]      // A12
+
+        ADD X0, X23, XZR
+        ADD X1, X26, XZR
+        ADDI X2, XZR, #2        // quadrant = 2
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #96]      // A21
+
+        ADD X0, X23, XZR
+        ADD X1, X26, XZR
+        ADDI X2, XZR, #3        // quadrant = 3
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #104]      // A22
+
+        ADD X0, X24, XZR
+        ADD X1, X26, XZR
+        ADD X2, XZR, XZR        // quadrant = 0
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #112]   // B11
+
+        ADD X0, X24, XZR
+        ADD X1, X26, XZR
+        ADDI X2, XZR, #1        // quadrant = 1
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #120]   // B12
+
+        ADD X0, X24, XZR
+        ADD X1, X26, XZR
+        ADDI X2, XZR, #2        // quadrant = 2
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #128]   // B21
+
+        ADD X0, X24, XZR
+        ADD X1, X26, XZR
+        ADDI X2, XZR, #3        // quadrant = 3
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #136]   // B22
+
+        ADD X0, X25, XZR
+        ADD X1, X26, XZR
+        ADD X2, XZR, XZR        // quadrant = 0
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #144]   // C11
+
+        ADD X0, X25, XZR
+        ADD X1, X26, XZR
+        ADDI X2, XZR, #1        // quadrant = 1
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #144]   // C12
+
+        ADD X0, X25, XZR
+        ADD X1, X26, XZR
+        ADDI X2, XZR, #2        // quadrant = 2
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #144]   // C21
+
+        ADD X0, X25, XZR
+        ADD X1, X26, XZR
+        ADDI X2, XZR, #3        // quadrant = 3
+        ADD X3, X22, XZR
+        BL splitOffset
+        STUR X8, [SP, #144]   // C22
+
+        // C11 = A11B11 + A12B21 (diagonal block)
+        LDUR X0, [SP, #80]      // A11
+        LDUR X1, [SP, #112]     // B11
+        LDUR X2, [SP, #144]     // C11
+        ADD X3, X20, XZR        // n/2
+        ADD X4, X21, XZR        // base
+        ADD X5, X22, XZR        // stride
+        BL recBlockMul     
+
+        LDUR X0, [SP, #88]      // A12
+        LDUR X1, [SP, #128]     // B21
+        LDUR X2, [SP, #144]     // C11
+        ADD X3, X20, XZR
+        ADD X4, X21, XZR
+        ADD X5, X22, XZR
+        BL recBlockMul
+        ADD X19, X19, X0        //t += recBlockMul ( A12 , B21 , C11 , n /2 , base , stride ) 
+
+        // C12 = A11B12 + A12B22 ( off - diagonal block )
+        LDUR X0, [SP, #80]      // A11
+        LDUR X1, [SP, #120]     // B12
+        LDUR X2, [SP, #152]     // C12
+        ADD X3, X20, XZR
+        ADD X4, X21, XZR
+        ADD X5, X22, XZR
+        BL recBlockMul
+
+        LDUR X0, [SP, #88]      // A12
+        LDUR X1, [SP, #136]     // B22
+        LDUR X2, [SP, #152]     // C12
+        ADD X3, X20, XZR
+        ADD X4, X21, XZR
+        ADD X5, X22, XZR
+        BL recBlockMul
+
+        // C21 = A21B11 + A22B21 ( off - diagonal block )
+        LDUR X0, [SP, #96]      // A21
+        LDUR X1, [SP, #112]     // B11
+        LDUR X2, [SP, #160]     // C21
+        ADD X3, X20, XZR
+        ADD X4, X21, XZR
+        ADD X5, X22, XZR
+        BL recBlockMul
+
+        LDUR X0, [SP, #104]     // A22
+        LDUR X1, [SP, #128]     // B21
+        LDUR X2, [SP, #160]     // C21
+        ADD X3, X20, XZR
+        ADD X4, X21, XZR
+        ADD X5, X22, XZR
+        BL recBlockMul
+
+        // C22 = A21B12 + A22B22 ( diagonal block )
+        LDUR X0, [SP, #96]      // A21
+        LDUR X1, [SP, #120]     // B12
+        LDUR X2, [SP, #168]     // C22
+        ADD X3, X20, XZR
+        ADD X4, X21, XZR
+        ADD X5, X22, XZR
+        BL recBlockMul
+
+        LDUR X0, [SP, #104]     // A22
+        LDUR X1, [SP, #136]     // B22
+        LDUR X2, [SP, #168]     // C22
+        ADD X3, X20, XZR
+        ADD X4, X21, XZR
+        ADD X5, X22, XZR
+        BL recBlockMul
+        ADD X19, X19, X0        // t += recBlockMul ( A22 , B22 , C22 , n /2 , base , stride ) 
+
+        ADD X0, X19, XZR        // return t
+
+        //restore garbage values
+        LDUR X26, [SP, #72]
+        LDUR X25, [SP, #64]
+        LDUR X24, [SP, #56]
+        LDUR X23, [SP, #48]
+        LDUR X22, [SP, #40]
+        LDUR X21, [SP, #32]
+        LDUR X20, [SP, #24]
+        LDUR X19, [SP, #16]
+        LDUR FP, [SP, #8]
+        LDUR LR, [SP, #0]
+        ADDI SP, SP, #176
+        BR LR
 
         //YOUR CODE ENDS HERE
 
