@@ -161,6 +161,7 @@ loop_k:
         MUL X11, X9, X10        // A * B
         ADD X26, X26, X11       // sum += A * B
         ADDI X24, X24, #1       // increment k
+        B loop_k
 
 part2_k_done:
         // getAddr(C, i, j, stride)
@@ -235,10 +236,10 @@ splitOffset:
         ADD X8, X0, XZR //if quad == 0, return x8 as is (pointing to the base)
         BR LR
 
-        caseNonZero:
-        ADD X4, XZR, #1 //for quadrant == 1 store in x4
-        ADD X5, XZR, #2 //for quadrant == 2 store in x5
-        ADD X6, XZR, #3 //for quadrant == 3 store in x6
+caseNonZero:
+        ADDI X4, XZR, #1 //for quadrant == 1 store in x4
+        ADDI X5, XZR, #2 //for quadrant == 2 store in x5
+        ADDI X6, XZR, #3 //for quadrant == 3 store in x6
 
         MUL X9, X7, X3 //half * stride 
 
@@ -252,13 +253,13 @@ splitOffset:
         ADD X9, X9, X7 //half*stride + half
         LSL X9, X9, #3  //offset *8
         ADD X8, X0, X9  //result = base + (half*stride+half)*8
-
-        case1:
+        BR LR
+case1:
         LSL X7, X7, #3  //half*8
         ADD X8, X0, X7 //if quad == 1, result = base + half
         BR LR
 
-        case2: 
+case2: 
         LSL X9, X9, #3  //8*(half*stride) offset calc
         ADD X8, X0, X9 //if quad == 2, result = base + (half*stride) 
         BR LR
@@ -386,21 +387,21 @@ splitOffsets:
         ADDI X2, XZR, #1        // quadrant = 1
         ADD X3, X22, XZR
         BL splitOffset
-        STUR X8, [SP, #144]   // C12
+        STUR X8, [SP, #152]   // C12
 
         ADD X0, X25, XZR
         ADD X1, X26, XZR
         ADDI X2, XZR, #2        // quadrant = 2
         ADD X3, X22, XZR
         BL splitOffset
-        STUR X8, [SP, #144]   // C21
+        STUR X8, [SP, #160]   // C21
 
         ADD X0, X25, XZR
         ADD X1, X26, XZR
         ADDI X2, XZR, #3        // quadrant = 3
         ADD X3, X22, XZR
         BL splitOffset
-        STUR X8, [SP, #144]   // C22
+        STUR X8, [SP, #168]   // C22
 
         // C11 = A11B11 + A12B21 (diagonal block)
         LDUR X0, [SP, #80]      // A11
