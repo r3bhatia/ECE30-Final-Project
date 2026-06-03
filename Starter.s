@@ -233,7 +233,7 @@ splitOffset:
         LSR X7, X1, #1  //divide by two by doing logical shift (half = n/2)
         CBNZ X2, caseNonZero
         ADD X8, X0, XZR //if quad == 0, return x8 as is (pointing to the base)
-        BR 
+        BR LR
 
         caseNonZero:
         ADD X4, XZR, #1 //for quadrant == 1 store in x4
